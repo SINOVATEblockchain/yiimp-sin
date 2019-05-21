@@ -122,6 +122,35 @@ void coinbase_create(YAAMP_COIND *coind, YAAMP_JOB_TEMPLATE *templ, json_value *
 		if (strlen(coind->charity_address) == 0)
 			sprintf(coind->charity_address, "EdFwYw4Mo2Zq6CFM2yNJgXvE2DTJxgdBRX");
 	}
+
+        if(strcmp(coind->symbol, "SIN") == 0) {
+
+                                // these just get reused
+                                char sinpayee[256] = {0};
+                                char sinscript[1024] = {0};
+                                json_int_t pool_amount = (0);
+
+                                // start writing tx
+                                strcat(templ->coinb2,"08");
+                                job_pack_tx(coind, templ->coinb2, available, NULL);
+                                json_value* masternodes = json_get_array(json_result, "masternode");
+
+                                for(int i = 0; i < masternodes->u.array.length; i++)
+                                {
+                                    const char *payee = json_get_string(masternodes->u.array.values[i], "payee");
+                                    json_int_t amount = json_get_int(masternodes->u.array.values[i], "amount");
+
+                                    snprintf(sinpayee, 255, "%s", payee);
+                                    base58_decode(sinpayee, sinscript);
+                                    available -= amount;
+
+                                    printf("* #%d - payee %s\n", i, payee);
+                                    job_pack_tx(coind, templ->coinb2, amount, sinscript);
+                                }
+                                strcat(templ->coinb2, "00000000");
+                                return;
+        }
+
 	else if(strcmp(coind->symbol, "DYN") == 0)
 	{
 		char script_dests[2048] = { 0 };

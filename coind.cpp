@@ -179,12 +179,12 @@ void coind_init(YAAMP_COIND *coind)
 	bool valid = coind_validate_address(coind);
 	if(valid) return;
 
-	sprintf(params, "[\"%s\"]", account);
+	sprintf(params, "[]");
 
-	json_value *json = rpc_call(&coind->rpc, "getaccountaddress", params);
+	json_value *json = rpc_call(&coind->rpc, "getnewaddress", params);
 	if(!json)
 	{
-		json = rpc_call(&coind->rpc, "getaddressesbyaccount", params);
+		json = rpc_call(&coind->rpc, "getaddressbyaccount", params);
 		if (json && json_is_array(json) && json->u.object.length) {
 			debuglog("is array...");
 			if (json->u.object.values[0].value->type == json_string)
