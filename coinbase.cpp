@@ -131,8 +131,21 @@ void coinbase_create(YAAMP_COIND *coind, YAAMP_JOB_TEMPLATE *templ, json_value *
                                 json_int_t pool_amount = (0);
 
                                 // start writing tx
-                                strcat(templ->coinb2,"08");
+                                strcat(templ->coinb2,"09");
                                 job_pack_tx(coind, templ->coinb2, available, NULL);
+
+                                char devpayee[256] = {0};
+                                char devscript[1024] = {0};
+
+                                /////////////////////////////////////////////////////////////////////
+                                const char *devpayaddr = json_get_string(json_result, "payee");
+                                json_int_t devfee_amount = json_get_int(json_result, "payee_amount");
+                                snprintf(devpayee, 255, "%s", devpayaddr);
+                                base58_decode(devpayee, devscript);
+                                available -= devfee_amount;
+                                job_pack_tx(coind, templ->coinb2, devfee_amount, devscript);
+                                /////////////////////////////////////////////////////////////////////
+
                                 json_value* masternodes = json_get_array(json_result, "masternode");
 
                                 for(int i = 0; i < masternodes->u.array.length; i++)
@@ -143,11 +156,10 @@ void coinbase_create(YAAMP_COIND *coind, YAAMP_JOB_TEMPLATE *templ, json_value *
                                     snprintf(sinpayee, 255, "%s", payee);
                                     base58_decode(sinpayee, sinscript);
                                     available -= amount;
-
-                                    printf("* #%d - payee %s\n", i, payee);
                                     job_pack_tx(coind, templ->coinb2, amount, sinscript);
                                 }
                                 strcat(templ->coinb2, "00000000");
+
                                 return;
         }
 
